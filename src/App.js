@@ -7,10 +7,14 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retrying, setRetrying] = useState(false);
 
+  // Define the function before using it
   const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
       const response = await fetch('https://swapi.dev/api/films/');
       if (!response.ok) {
@@ -28,15 +32,31 @@ function App() {
         };
       });
       setMovies(transformedMovies);
+      setRetrying(false); // Reset retrying state if successful
     } catch (error) {
-      setError(error.message);
+      setError(`Something went wrong! Retrying... (${retryCount})`);
+      setRetrying(true);
+
+      // Retry logic with a delay of 5 seconds
+      if (retrying && retryCount < 5) {
+        setTimeout(() => {
+          setRetryCount((prevCount) => prevCount + 1);
+          fetchMoviesHandler();
+        }, 5000);
+      }
     }
+
     setIsLoading(false);
-  }, []);
+  }, [retrying, retryCount]);
+
+  const cancelRetryHandler = () => {
+    setRetrying(false);
+    setRetryCount(0);
+  };
 
   useEffect(() => {
     fetchMoviesHandler();
-  }, [fetchMoviesHandler]);
+  }, [fetchMoviesHandler, retrying]);
 
   let content = <p>Found no movies.</p>;
 
@@ -45,7 +65,12 @@ function App() {
   }
 
   if (error) {
-    content = <p>{error}</p>;
+    content = (
+      <div>
+        <p>{error}</p>
+        <button onClick={cancelRetryHandler}>Cancel Retry</button>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -55,7 +80,7 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+        <button onClick={() => fetchMoviesHandler()}>Fetch Movies</button>
       </section>
       <section>{content}</section>
     </React.Fragment>
