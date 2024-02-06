@@ -1,21 +1,19 @@
+// MoviesList.jsx
 import React from 'react';
 
-import Movie from './Movie';
-import classes from './MoviesList.module.css';
-
-const MovieList = (props) => {
+const MoviesList = ({ movies, onDeleteMovie }) => {
   return (
-    <ul className={classes['movies-list']}>
-      {props.movies.map((movie) => (
-        <Movie
-          key={movie.id}
-          title={movie.title}
-          releaseDate={movie.releaseDate}
-          openingText={movie.openingText}
-        />
+    <ul>
+      {movies.map((movie) => (
+        <li key={movie.id}>
+          <h2>{movie.title}</h2>
+          <div>{movie.openingText}</div>
+          <div>{movie.releaseDate}</div>
+          <button onClick={() => onDeleteMovie(movie.id)}>Delete Movie</button>
+        </li>
       ))}
     </ul>
   );
 };
 
-export default MovieList;
+export default MoviesList;

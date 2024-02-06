@@ -1,5 +1,5 @@
+// App.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-
 import MoviesList from './components/MoviesList';
 import AddMovie from './components/AddMovies';
 import './App.css';
@@ -13,7 +13,9 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://moviesapp-2034e-default-rtdb.firebaseio.com/movies.json');
+      const response = await fetch(
+        'https://moviesapp-2034e-default-rtdb.firebaseio.com/movies.json'
+      );
       if (!response.ok) {
         throw new Error('Something went wrong!');
       }
@@ -42,22 +44,43 @@ function App() {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  async function addMovieHandler(movie) {
-    const response = await fetch('https://moviesapp-2034e-default-rtdb.firebaseio.com/movies.json', {
-      method: 'POST',
-      body: JSON.stringify(movie),
-      headers: {
-        'Content-Type': 'application/json'
+  const addMovieHandler = async (movie) => {
+    const response = await fetch(
+      'https://moviesapp-2034e-default-rtdb.firebaseio.com/movies.json',
+      {
+        method: 'POST',
+        body: JSON.stringify(movie),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
     const data = await response.json();
     console.log(data);
-  }
+    // After adding a movie, fetch the updated list
+    fetchMoviesHandler();
+  };
+
+  const deleteMovieHandler = async (movieId) => {
+    const response = await fetch(
+      `https://moviesapp-2034e-default-rtdb.firebaseio.com/movies/${movieId}.json`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (response.ok) {
+      // Remove the deleted movie from the local state
+      setMovies((prevMovies) =>
+        prevMovies.filter((movie) => movie.id !== movieId)
+      );
+    }
+  };
 
   let content = <p>Found no movies.</p>;
 
   if (movies.length > 0) {
-    content = <MoviesList movies={movies} />;
+    content = <MoviesList movies={movies} onDeleteMovie={deleteMovieHandler} />;
   }
 
   if (error) {
